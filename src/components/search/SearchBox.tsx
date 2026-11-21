@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { searchItems, POPULAR_SEARCHES, type SearchItem } from "@/lib/search";
 import { track } from "@/lib/analytics";
+import { withBasePath } from "@/lib/site";
 
 let indexPromise: Promise<SearchItem[]> | null = null;
 function loadIndex(): Promise<SearchItem[]> {
-  indexPromise ??= fetch("/search-index.json")
+  indexPromise ??= fetch(withBasePath("/search-index.json"))
     .then((r) => (r.ok ? r.json() : []))
     .catch(() => {
       indexPromise = null;
@@ -23,6 +24,8 @@ const CATEGORY_NAMES: Record<string, string> = {
   minimal: "Minimal",
   technology: "Technology",
   nature: "Nature",
+  business: "Business",
+  food: "Food",
 };
 
 export function SearchBox({ variant = "header", autoFocus = false }: { variant?: "header" | "hero"; autoFocus?: boolean }) {
@@ -181,7 +184,7 @@ export function PopularSearches() {
       {POPULAR_SEARCHES.slice(0, 6).map((s) => (
         <a
           key={s}
-          href={`/animations/?q=${encodeURIComponent(s)}`}
+          href={withBasePath(`/animations/?q=${encodeURIComponent(s)}`)}
           className="rounded-full border border-border bg-surface px-3 py-1 text-muted transition hover:border-brand/40 hover:text-text"
         >
           {s}

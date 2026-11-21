@@ -7,6 +7,9 @@ import { GUIDES } from "@/content/guides";
 import { absoluteUrl, SITE } from "@/lib/site";
 import { isNoindex } from "@/lib/seo";
 
+// Built once; required for the static export (GitHub Pages).
+export const dynamic = "force-static";
+
 // Only canonical, indexable URLs (with trailing slashes, matching the canonical tags).
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = SITE.launchDate;

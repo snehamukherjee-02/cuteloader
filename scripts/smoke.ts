@@ -7,14 +7,18 @@
  *   - every internal link found on any page resolves (no 404s)
  *
  *   node --import ./scripts/register.mjs scripts/smoke.ts [baseUrl]
+ *
+ * baseUrl may include a sub-path (http://localhost:4173/cuteloader for a GitHub Pages build).
  */
 import { Browser } from "./cdp.ts";
 
 const base = (process.argv[2] || "http://localhost:3000").replace(/\/$/, "");
+// Sitemap locations and link hrefs are root-relative paths that already include any sub-path.
+const origin = new URL(base).origin;
 const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
 const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => {
   const u = new URL(m[1]);
-  return `${base}${u.pathname}`;
+  return `${origin}${u.pathname}`;
 });
 console.log(`Checking ${urls.length} URLs from sitemap.xml on ${base}`);
 
@@ -104,7 +108,7 @@ await Promise.all(
   Array.from({ length: 6 }, async () => {
     while (toCheck.length) {
       const p = toCheck.shift()!;
-      const res = await fetch(`${base}${p}`, { redirect: "manual" });
+      const res = await fetch(`${origin}${p}`, { redirect: "manual" });
       checked++;
       if (res.status >= 400) problems.push(`broken link or asset: ${p} (HTTP ${res.status})`);
     }

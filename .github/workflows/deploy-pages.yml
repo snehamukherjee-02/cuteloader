@@ -1,0 +1,74 @@
+# Builds the site as static files and publishes it to GitHub Pages on every push to main.
+# One-time setup: Settings → Pages → Source: "GitHub Actions".
+# Optional analytics/ads/verification IDs: Settings → Secrets and variables → Actions → Variables
+# (names as in .env.example). They are public IDs, so variables, not secrets.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; let an in-progress one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - id: pages
+        uses: actions/configure-pages@v6
+
+      - run: npm ci
+
+      - name: Build static site
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          STATIC_EXPORT: "true"
+          # "/cuteloader" and "https://<user>.github.io/cuteloader" (or "" and your domain once a custom domain is set)
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_SITE_URL: ${{ steps.pages.outputs.base_url }}
+          NEXT_PUBLIC_GITHUB_URL: ${{ github.server_url }}/${{ github.repository }}
+          NEXT_PUBLIC_GITHUB_REPO: ${{ github.repository }}
+          NEXT_PUBLIC_TWITTER_HANDLE: ${{ vars.NEXT_PUBLIC_TWITTER_HANDLE }}
+          NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${{ vars.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
+          NEXT_PUBLIC_BING_SITE_VERIFICATION: ${{ vars.NEXT_PUBLIC_BING_SITE_VERIFICATION }}
+          NEXT_PUBLIC_GA_ID: ${{ vars.NEXT_PUBLIC_GA_ID }}
+          NEXT_PUBLIC_ADSENSE_CLIENT: ${{ vars.NEXT_PUBLIC_ADSENSE_CLIENT }}
+          NEXT_PUBLIC_ADSENSE_SLOT_HOME: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_HOME }}
+          NEXT_PUBLIC_ADSENSE_SLOT_BLOG: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_BLOG }}
+          NEXT_PUBLIC_ADSENSE_SLOT_FOOTER: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_FOOTER }}
+
+      # Without an AdSense ID the ads.txt route answers 404, which a static export
+      # can't express; drop the placeholder file instead of serving "Not found" as 200.
+      - name: Remove placeholder ads.txt
+        run: if [ "$(cat out/ads.txt 2>/dev/null)" = "Not found" ]; then rm out/ads.txt; fi
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

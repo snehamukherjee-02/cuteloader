@@ -3,13 +3,25 @@
  * variables so the same code runs locally, on Vercel, or on any Node host.
  */
 
+/**
+ * Sub-path the site is served from ("" at a domain root, "/cuteloader" on GitHub Pages).
+ * next/link and next/navigation add it automatically; use withBasePath() for raw
+ * URLs (fetch, plain <a>, manifest icons).
+ */
+export const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/+$/, "");
+
+export function withBasePath(path: string): string {
+  return `${BASE_PATH}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+/** Public URL of the site, including BASE_PATH. */
 function resolveSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL;
   if (explicit) return explicit.replace(/\/+$/, "");
   // Vercel exposes the production domain at build time.
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercel) return `https://${vercel.replace(/\/+$/, "")}`;
-  return "http://localhost:3000";
+  return `http://localhost:3000${BASE_PATH}`;
 }
 
 export const SITE = {

@@ -25,6 +25,7 @@ import { buildCss, buildSvg, cycleSeconds, defaultConfig, LIMITS, sanitizeConfig
 import { exportConfig, FILE_NAMES } from "@/lib/codegen";
 import { copyText, downloadFile } from "@/lib/clipboard";
 import { track } from "@/lib/analytics";
+import { withBasePath } from "@/lib/site";
 import { loadAnimation } from "@/animations/load";
 import { ColorField, ControlGroup, IconButton, Segmented, SliderField, ToggleField } from "./controls";
 import { ExportPanel, type ExportTab } from "@/components/export/ExportPanel";
@@ -304,7 +305,7 @@ export function Studio({
               <Shuffle className="h-4 w-4" />
             </IconButton>
           </div>
-          <a href={`/animations/${def.category}/${def.slug}/`} className="px-1 text-sm font-semibold text-brand-strong hover:underline">
+          <a href={withBasePath(`/animations/${def.category}/${def.slug}/`)} className="px-1 text-sm font-semibold text-brand-strong hover:underline">
             About this loader
           </a>
         </div>
